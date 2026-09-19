@@ -3,7 +3,7 @@
 SHA0302 site builder
 --------------------
 Run:   python3 build.py
-Reads: this folder (00_15weeks.html, topicNN.html, _shell_top.html)
+Reads: this folder (ch1_saleem.html, 00_15weeks.html, sha0302_topic*.html, sha0719_week*.html, _shell_top.html)
 Makes: ../site/index.html  (single self-contained page)
 """
 import os, re
@@ -12,22 +12,13 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 SITE = os.path.join(HERE, '..', 'site')
 rd = lambda n: open(os.path.join(HERE, n), encoding='utf8').read()
 
-# ------------------------------------------------------------------ topics
-# (file, label shown on the badge, first topic number used by the release switch)
-TOPICS = [
-    ('topic01.html',    '1',   1),
-    ('topic02.html',    '2',   2),
-    ('topic03.html',    '3',   3),
-    ('topic04.html',    '4',   4),
-    ('topic05.html',    '5',   5),
-    ('topic06_07.html', '6-7', 6),
-    ('topic08.html',    '8',   8),
-    ('topic09.html',    '9',   9),
-    ('topic10.html',    '10',  10),
-    ('topic11.html',    '11',  11),
-    ('topic12.html',    '12',  12),
-    ('topic13.html',    '13',  13),
-]
+# ------------------------------------------------------------------ file lists
+# (file, badge label, sequence number used by the release switch)
+TOPICS = [('sha0302_topic01.html','1',1),('sha0302_topic02.html','2',2),('sha0302_topic03.html','3',3),
+          ('sha0302_topic04.html','4',4),('sha0302_topic05.html','5',5),('sha0302_topic06_07.html','6-7',6),
+          ('sha0302_topic08.html','8',8),('sha0302_topic09.html','9',9),('sha0302_topic10.html','10',10),
+          ('sha0302_topic11.html','11',11),('sha0302_topic12.html','12',12),('sha0302_topic13.html','13',13)]
+WEEKS = [('sha0719_week%02d.html' % n, str(n), n) for n in range(1, 16)]
 
 # ------------------------------------------------------------------ css scoper
 def scope_css(css, prefix):
@@ -60,18 +51,27 @@ css15 = css15.replace('.wrap{', '.p1wrap{', 1)
 css15 = css15.replace('@media print { .printbtn{display:none !important;} }', '')
 css15 = scope_css(css15, '#part1')
 
-# ------------------------------------------------------------------ part 2 (topics)
-acc = []
-for idx, (fn, label, first) in enumerate(TOPICS, 1):
-    frag = rd(fn).strip()
-    title = re.search(r'<h1[^>]*>(.*?)</h1>', frag, re.S).group(1).strip()
-    frag = frag.replace('onclick="window.print()"', "onclick=\"printPart('p2')\"")
-    acc.append(
-        '<details class="week-acc" id="weekAcc%d" data-topic="%d">\n'
-        '  <summary><span class="week-num">ޓޮޕިކް %s</span><span class="week-title">%s</span>'
-        '<span class="week-chev">&#9660;</span></summary>\n'
-        '  <div class="week-body">\n%s\n  </div>\n</details>\n' % (idx, first, label, title, frag))
-acc = '\n'.join(acc)
+# ------------------------------------------------------------------ chapter 1 (Sheikh Ahmed Saleem)
+ch1 = rd('ch1_saleem.html').strip()
+ch1 = re.sub(r'<a\s+style="position: absolute', '<a onclick="printPart(\'p0\')" style="position: absolute', ch1, 1)
+assert "printPart('p0')" in ch1
+
+# ------------------------------------------------------------------ parts 2 & 3
+def make_acc(items, prefix, word, printarg, dattr):
+    out = []
+    for idx, (fn, label, seq) in enumerate(items, 1):
+        frag = rd(fn).strip()
+        title = re.search(r'<h1[^>]*>(.*?)</h1>', frag, re.S).group(1).strip()
+        frag = frag.replace('onclick="window.print()"', "onclick=\"printPart('%s')\"" % printarg)
+        out.append(
+            '<details class="week-acc" id="%sAcc%d" %s="%d">\n'
+            '  <summary><span class="week-num">%s %s</span><span class="week-title">%s</span>'
+            '<span class="week-chev">&#9660;</span></summary>\n'
+            '  <div class="week-body">\n%s\n  </div>\n</details>\n' % (prefix, idx, dattr, seq, word, label, title, frag))
+    return '\n'.join(out)
+
+acc2 = make_acc(TOPICS, 'topic', 'ޓޮޕިކް', 'p2', 'data-topic')
+acc3 = make_acc(WEEKS, 'week', 'ހަފްތާ', 'p3', 'data-week')
 
 # ------------------------------------------------------------------ extra css
 EXTRA_CSS = r"""
@@ -92,6 +92,16 @@ img,svg,video,iframe{max-width:100%;}
 .part-head p{margin:6px 0 0;color:#f2e6bf;font-size:clamp(13px,1.6vw,16px);line-height:1.8;}
 #part1 .part-head{background:linear-gradient(135deg,#7a1f1f 0%,#a3372f 100%);}
 #part2 .part-head{background:linear-gradient(135deg,#08281f 0%,#12503a 100%);}
+#part3 .part-head{background:linear-gradient(135deg,#002D62 0%,#1d5a8a 100%);}
+#ch1 .part-head{background:linear-gradient(135deg,#5b3a0a 0%,#a8741f 100%);}
+.ch-head{background:linear-gradient(135deg,#08281f 0%,#12503a 100%);border:3px double #d4af37;border-radius:16px;
+  text-align:center;color:#fff;padding:22px 14px;margin:0 0 22px;box-shadow:0 10px 28px rgba(8,40,31,.3);}
+.ch-head .pno{display:inline-block;background:#d4af37;color:#08281f;border-radius:20px;padding:3px 18px;font-weight:bold;
+  font-size:clamp(13px,1.6vw,16px);margin-bottom:8px;}
+.ch-head h2{margin:0;font-size:clamp(20px,3vw,30px);line-height:1.7;text-shadow:2px 2px 6px rgba(0,0,0,.4);}
+.ch-head p{margin:6px 0 0;color:#f2e6bf;font-size:clamp(13px,1.6vw,16px);line-height:1.8;}
+.ch-divider{margin:56px 0 40px;}
+.ch-divider .rule{border-top:6px double #b7862e;}
 .part-divider{margin:44px 0 34px;text-align:center;}
 .part-divider .rule{height:0;border-top:4px double #b7862e;margin:0 auto 18px;max-width:560px;}
 .part-divider .note{display:inline-block;max-width:680px;background:#fff8dc;border:2px dashed #b7862e;
@@ -156,13 +166,24 @@ html{scroll-behavior:smooth;}
 /* ===== print ===== */
 @media print{
   body:not(.print-all) .hero,body:not(.print-all) .imam-card,body:not(.print-all) .part-nav,
-  body:not(.print-all) .part-divider,body:not(.print-all) #part1 .part-head,body:not(.print-all) #part2 .part-head{display:none !important;}
-  body:not(.print-all):not(.print-p1) #part1{display:none !important;}
-  body.print-p1 #part2,body.print-p1 .part-divider,body.print-p1 .part-nav{display:none !important;}
-  body.print-p1 .hero,body.print-p1 .imam-card{display:none !important;}
+  body:not(.print-all) .part-divider,body:not(.print-all) .part-head,body:not(.print-all) .ch-head{display:none !important;}
+  body:not(.print-all) #ch1,body:not(.print-all) #part1,body:not(.print-all) #part2,body:not(.print-all) #part3{display:none !important;}
+  body.print-p0:not(.print-all) #ch1,body.print-p1:not(.print-all) #part1,body.print-p2:not(.print-all) #part2,body.print-p3:not(.print-all) #part3{display:block !important;}
   #courseContent{padding:0;margin:0;background:none;}
 }
 """
+
+def dup_ch1(css):
+    out = []
+    for line in css.split('\n'):
+        m = re.match(r'^(\s*)(\.week-body[^{]*)\{(.*)$', line)
+        if m and m.group(2).strip() != '.week-body':
+            sels = [x for x in m.group(2).split(',')]
+            more = [x.replace('.week-body', '#ch1', 1) for x in sels]
+            line = m.group(1) + ','.join(sels + more) + '{' + m.group(3)
+        out.append(line)
+    return '\n'.join(out)
+EXTRA_CSS = dup_ch1(EXTRA_CSS)
 
 # ------------------------------------------------------------------ shell top (head + hero + intro)
 top = rd('_shell_top.html')
@@ -180,15 +201,88 @@ assert 'class="hero"' in top, 'hero class patch failed'
 part1_css = '\n/* ===== part 1: 15-week file (scoped) ===== */\n' + css15 + '\n'
 top = top.replace('</style>', EXTRA_CSS + part1_css + '</style>', 1)
 
+# password window (full-screen) replaces the small code chip in the hero
+chip = re.search(r'<div\s+style="background-color: rgba\(0, 0, 0, 0.4\)[^"]*">\s*<svg.*?<span>:ކޯޑު</span></div>', top, re.S)
+assert chip, 'gate chip not found'
+top = top.replace(chip.group(0), '', 1)
+top = re.sub(r'<div id="gateMsg"[^>]*></div>', '', top, 1)
+avatar = re.search(r'<img src="(data:image/jpeg;base64,[^"]+)"', top).group(1)
+GATE_CSS = """
+/* ===== password window ===== */
+body.locked{overflow:hidden;}
+#gateOverlay{position:fixed;inset:0;z-index:2000;display:flex;align-items:center;justify-content:center;
+  padding:16px;background:linear-gradient(135deg,#002D62 0%,#004B23 100%);overflow:auto;transition:opacity .35s ease;}
+#gateOverlay.hide{opacity:0;pointer-events:none;}
+#gateCard{width:100%;max-width:400px;background:#fffdf5;border:3px double #d4af37;border-radius:18px;
+  padding:26px 20px 22px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.45);direction:rtl;}
+#gateCard img{width:84px;height:84px;border-radius:50%;object-fit:cover;border:3px solid #d4af37;box-shadow:0 6px 16px rgba(0,0,0,.3);}
+#gateCard h1{margin:12px 0 2px;font-size:clamp(19px,5.4vw,25px);color:#08281f;line-height:1.7;}
+#gateCard .en{font-family:Tahoma,Arial,sans-serif;color:#8a7a3d;font-size:14px;margin-bottom:2px;}
+#gateCard .uni{font-family:Tahoma,Arial,sans-serif;color:#12503a;font-size:13px;margin-bottom:16px;}
+#gateCard .lbl{display:block;color:#08281f;font-weight:bold;font-size:15px;margin-bottom:8px;}
+#gateForm{display:flex;flex-direction:column;gap:10px;}
+#gateInput{width:100%;text-align:center;font-family:Tahoma,Arial,sans-serif;font-size:18px;font-weight:bold;letter-spacing:2px;
+  color:#08281f;background:#fff;border:2px solid #b7862e;border-radius:10px;padding:11px 10px;text-transform:uppercase;box-sizing:border-box;}
+#gateInput:focus{outline:none;border-color:#b7862e;box-shadow:0 0 0 3px rgba(212,175,55,.4);}
+#gateBtn{cursor:pointer;border:2px solid #d4af37;border-radius:10px;padding:11px;font-size:17px;font-weight:bold;
+  font-family:inherit;color:#f4d03f;background:linear-gradient(135deg,#08281f 0%,#12503a 100%);}
+#gateMsg{min-height:20px;margin-top:10px;font-size:14px;color:#a3372f;}
+"""
+top = top.replace('</style>', GATE_CSS + '</style>', 1)
+top = top.replace('<body>', '<body class="locked">', 1)
+GATE_HTML = """<div id="gateOverlay">
+  <div id="gateCard">
+    <img src="%s" alt="">
+    <h1>ކަށުކަމާކެމީގެ ފިޤުހީ ޙުކުމްތައް</h1>
+    <div class="en">Rules of Janazah — SHA0302</div>
+    <div class="uni">Islamic University of Maldives</div>
+    <form id="gateForm" onsubmit="return false;" autocomplete="off">
+      <label class="lbl" for="gateInput">ޕާސްވޯޑް ޖައްސަވާ</label>
+      <input type="password" id="gateInput" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="••••••••" inputmode="text">
+      <button type="button" id="gateBtn">ވަދޭ</button>
+    </form>
+    <div id="gateMsg" role="alert"></div>
+  </div>
+</div>
+""" % avatar
+top = top.replace('<body class="locked">', '<body class="locked">\n' + GATE_HTML, 1)
+
 # ------------------------------------------------------------------ course content
 content = '''<div class="course-wrap" id="courseContent">
 
 <div class="part-nav no-print">
-  <a data-goto="part1"><b>1</b> 15 ހަފްތާގެ ޚުލާޞާ ސްލައިޑްތައް</a>
-  <a data-goto="part2"><b>2</b> ޓޮޕިކް ވަކިވަކިން ތަފްޞީލީ ސްލައިޑްތައް</a>
+  <a data-goto="ch1"><b>1</b> ބާބު 1 — އައްޝެއިޚް އަޙްމަދު ސަލީމް</a>
+  <a data-goto="ch2"><b>2</b> ބާބު 2 — SHA0302</a>
+  <a data-goto="part3"><b>3</b> ބާބު 3 — SHA0719</a>
 </div>
 
-<!-- ============================ PART 1 ============================ -->
+<!-- ============================ CHAPTER 1 ============================ -->
+<section id="ch1">
+<div class="part-head">
+  <span class="pno">ބާބު 1</span>
+  <h2>މަރަށް ޙާޟިރުވެފައިވާ މީހާއާމެދު ކަންތައް ކުރާނެގޮތް</h2>
+  <p>އައްޝެއިޚް އަޙްމަދު ސަލީމްގެ «ކަށުކަމާކެމީކަން ދަސްކުރާ ކޯހުގެ އަތްމަތީ ފޮތް» އިން</p>
+</div>
+''' + ch1 + '''
+</section>
+
+<div class="part-divider ch-divider">
+  <div class="rule"></div>
+  <div class="note">
+    <strong>ފާހަގަ:</strong> މީގެ މަތީގައި ވަނީ <strong>ބާބު 1 (އައްޝެއިޚް އަޙްމަދު ސަލީމްގެ ސްލައިޑް).</strong><br>
+    މީގެ ތިރީގައި ވަނީ <strong>ބާބު 2 — SHA0302 ގެ ސްލައިޑްތަކެވެ.</strong>
+    <span class="arrow">&#9660;</span>
+  </div>
+</div>
+
+<!-- ============================ CHAPTER 2 (SHA0302) ============================ -->
+<div id="ch2">
+<div class="ch-head">
+  <span class="pno">ބާބު 2</span>
+  <h2>ކަށުކަމާކެމީގެ ފިޤުހީ ޙުކުމްތައް — SHA0302</h2>
+  <p>Rules of Janazah · ބައި 1: 15 ހަފްތާގެ ޚުލާޞާ · ބައި 2: ޓޮޕިކް ވަކިވަކިން ތަފްޞީލީ ސްލައިޑްތައް</p>
+</div>
+
 <section id="part1">
 <div class="part-head">
   <span class="pno">ބައި 1</span>
@@ -198,17 +292,15 @@ content = '''<div class="course-wrap" id="courseContent">
 ''' + body15 + '''
 </section>
 
-<!-- ============================ DIVIDER ============================ -->
 <div class="part-divider">
   <div class="rule"></div>
   <div class="note">
     <strong>ފާހަގަ:</strong> މީގެ މަތީގައި ވަނީ <strong>15 ހަފްތާގެ ޚުލާޞާ ސްލައިޑްތަކެވެ.</strong><br>
-    މީގެ ތިރީގައި ވަނީ <strong>ކޮންމެ ޓޮޕިކެއްގެ ތަފްޞީލީ ސްލައިޑްތަކެވެ.</strong>
+    މީގެ ތިރީގައި ވަނީ <strong>ޓޮޕިކް ވަކިވަކިން ތަފްޞީލީ ސްލައިޑްތަކެވެ.</strong>
     <span class="arrow">&#9660;</span>
   </div>
 </div>
 
-<!-- ============================ PART 2 ============================ -->
 <section id="part2">
 <div class="part-head">
   <span class="pno">ބައި 2</span>
@@ -216,8 +308,29 @@ content = '''<div class="course-wrap" id="courseContent">
   <p>Rules of Janazah — SHA0302 · ބޭނުންފުޅުވާ ޓޮޕިކެއް ހުޅުވުމަށް ފިއްތަވާ (އެއް ފަހަރާ ހުޅުވޭނީ އެންމެ ޓޮޕިކެއް)</p>
 </div>
 
-''' + acc + '''
-<div class="to-top no-print"><a data-goto="part1">&#9650; 15 ހަފްތާގެ ޚުލާޞާ ބައިއަށް ދާން</a></div>
+''' + acc2 + '''
+</section>
+</div>
+
+<div class="part-divider ch-divider">
+  <div class="rule"></div>
+  <div class="note">
+    <strong>ފާހަގަ:</strong> މީގެ މަތީގައި ވަނީ <strong>ބާބު 2 — SHA0302 ގެ ސްލައިޑްތަކެވެ.</strong><br>
+    މީގެ ތިރީގައި ވަނީ <strong>ބާބު 3 — SHA0719 ގެ ހަފްތާ ވަކިވަކިން ސްލައިޑްތަކެވެ.</strong>
+    <span class="arrow">&#9660;</span>
+  </div>
+</div>
+
+<!-- ============================ CHAPTER 3 (SHA0719) ============================ -->
+<section id="part3">
+<div class="part-head">
+  <span class="pno">ބާބު 3 · SHA0719</span>
+  <h2>ހަފްތާ ވަކިވަކިން ތަފްޞީލީ ސްލައިޑްތައް</h2>
+  <p>Fiqh of Janaza Rules — SHA0719 · ބޭނުންފުޅުވާ ހަފްތާއެއް ހުޅުވުމަށް ފިއްތަވާ (އެއް ފަހަރާ ހުޅުވޭނީ އެންމެ ހަފްތާއެއް)</p>
+</div>
+
+''' + acc3 + '''
+<div class="to-top no-print"><a data-goto="ch1">&#9650; އެންމެ މަތީގެ ބާބަށް ދާން</a></div>
 </section>
 
 </div>
@@ -231,32 +344,32 @@ bottom = r'''
   var CORRECT_CODE = 'SHA0302';
   var STORAGE_KEY = 'sha0302-course-unlocked';
   var input = document.getElementById('gateInput');
+  var btn = document.getElementById('gateBtn');
   var msg = document.getElementById('gateMsg');
+  var overlay = document.getElementById('gateOverlay');
   var content = document.getElementById('courseContent');
 
   function unlock(scroll){
     content.style.display = 'block';
-    input.value = '';
-    input.disabled = true;
-    input.style.opacity = '0.5';
-    msg.style.color = '#8fd9a8';
-    msg.textContent = 'ވަދެވިއްޖެ';
+    document.body.classList.remove('locked');
+    overlay.classList.add('hide');
+    setTimeout(function(){ overlay.style.display = 'none'; }, 400);
     try{ localStorage.setItem(STORAGE_KEY, '1'); }catch(e){}
-    if(scroll){ content.scrollIntoView({behavior:'smooth', block:'start'}); }
+    if(scroll){ setTimeout(function(){ content.scrollIntoView({behavior:'smooth', block:'start'}); }, 420); }
   }
   function tryCode(){
     var val = (input.value || '').trim().toUpperCase().replace(/\s+/g,'');
     if(val === CORRECT_CODE){
       unlock(true);
-    } else if(val.length){
-      msg.style.color = '#ff9e9e';
-      msg.textContent = 'ރަނގަޅެއް ނޫން';
+    } else {
+      msg.textContent = val.length ? 'ޕާސްވޯޑް ރަނގަޅެއް ނޫން' : 'ޕާސްވޯޑް ޖައްސަވާ';
       input.classList.remove('shake'); void input.offsetWidth; input.classList.add('shake');
+      input.select();
     }
   }
-  input.addEventListener('keydown', function(e){ if(e.key === 'Enter') tryCode(); });
-  input.addEventListener('blur', tryCode);
-  try{ if(localStorage.getItem(STORAGE_KEY) === '1'){ unlock(false); } }catch(e){}
+  input.addEventListener('keydown', function(e){ if(e.key === 'Enter'){ e.preventDefault(); tryCode(); } });
+  btn.addEventListener('click', tryCode);
+  try{ if(localStorage.getItem(STORAGE_KEY) === '1'){ unlock(false); overlay.style.display = 'none'; } else { setTimeout(function(){ input.focus(); }, 100); } }catch(e){}
 })();
 
 /* jump links (ބައި 1 / ބައި 2) */
@@ -268,20 +381,23 @@ document.querySelectorAll('[data-goto]').forEach(function(a){
   });
 });
 
-/* one topic open at a time (ބައި 2) */
+/* one accordion open at a time, per part */
 document.querySelectorAll('details.week-acc').forEach(function(d){
   d.addEventListener('toggle', function(){
     if(this.open){
-      document.querySelectorAll('details.week-acc').forEach(function(o){ if(o !== d) o.open = false; });
+      var sec = d.closest('section');
+      sec.querySelectorAll('details.week-acc').forEach(function(o){ if(o !== d) o.open = false; });
       this.scrollIntoView({behavior:'smooth', block:'start'});
     }
   });
 });
 
-/* release switch: value comes from config.js */
-var LAST = (typeof LAST_VISIBLE_TOPIC === 'number') ? LAST_VISIBLE_TOPIC : 99;
+/* release switches: values come from config.js */
+var LT = (typeof LAST_VISIBLE_TOPIC === 'number') ? LAST_VISIBLE_TOPIC : 99;
+var LW = (typeof LAST_VISIBLE_WEEK === 'number') ? LAST_VISIBLE_WEEK : 99;
 document.querySelectorAll('details.week-acc').forEach(function(d){
-  if(parseInt(d.getAttribute('data-topic'), 10) > LAST){ d.style.display = 'none'; }
+  var t = d.getAttribute('data-topic'), w = d.getAttribute('data-week');
+  if((t && parseInt(t, 10) > LT) || (w && parseInt(w, 10) > LW)){ d.style.display = 'none'; }
 });
 
 /* printing */
@@ -293,8 +409,8 @@ function printWith(cls){
   setTimeout(function(){ window.print(); }, 150);
 }
 function printPart(p){   /* print button inside a slide file */
-  if(p === 'p1'){ document.querySelectorAll('#part1 details').forEach(function(d){ d.open = true; }); printWith('print-p1'); }
-  else { window.print(); }
+  if(p === 'p1' || p === 'p0'){ document.querySelectorAll(p === 'p0' ? '#ch1 details' : '#part1 details').forEach(function(d){ d.open = true; }); printWith('print-' + p); }
+  else { printWith('print-' + p); }
 }
 </script>
 
